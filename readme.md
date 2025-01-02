@@ -17,11 +17,12 @@ I used [Menu Planner](http://mp2.menu-planner.com/) for many years. Unfortunatel
 ## usage
 
 * Install [Node.js](https://nodejs.org)
-* Menu Planner seams to only allows you to send single recipes by mail. There you find an *.mpxr attachment which is a JSON formatted text file with all necessary data. Copy the file into the program folder as `Menu Planner Recipe.mpxr` (all recipes come with the same file name, so simply overwrite the last used)
-* edit `credentials.js.template` and save it as `credentials.js`
+* Menu Planner seams to only allow you to send a single recipes by mail. There you find an *.mpxr attachment which is a JSON formatted text file with all necessary data. Copy the file into the program folder as `Menu Planner Recipe.mpxr` (all recipes come with the same file name, so simply overwrite the last used). For testing my last import file is included.
+* edit `credentials.js.template` with your token and instance url and save it as `credentials.js`
 * edit `units.json` to match menu planner units with your language dependent units. (consider sending me your file to include it for other users)
 * run the script `npn start` or `node index.js`.
 * or convince your mail client of choice to save the attachment to the script folder and start the script.
+* Please **refresh the page before editing**! See known issues below.
 
 ## outlook users
 
@@ -77,7 +78,8 @@ End Sub
 
 * only minor error handling implemented.
 * I'm not sure what will be overwritten or patched/updated by the API request `PATCH /api/recipes/{slug} Patch One`. So be careful with existing recipes.
-* recipes appear in an running session of Mealie by clicking on the menu. For newly cerated ingredients and units you have to refresh the page!
+* recipes appear in an running session of Mealie by clicking on the menu. When you edit the recipe new ingredients and units will show as empty!. So **refresh the page before editing**
+* For newly cerated ingredients and units you have to refresh the page!
 * only tested with **German language** and **metric units**!
 * perhaps fine tune of fuzzy search is necessary.
 * no bulk export from menu planner seams possible.
@@ -89,8 +91,10 @@ End Sub
 from this
 
 (select the share button)
+![Menu Planner recipe](https://raw.githubusercontent.com/Christian-Me/mealie-import-menu_planner/master/images/mpExample-1.png)
 
 to this
+![Mealie recipe](https://raw.githubusercontent.com/Christian-Me/mealie-import-menu_planner/master/images/mealieExample-1.png)
 
 by opening a shell and goto the folder where you installed this script then call `npn start` or `node index.js`:
 
