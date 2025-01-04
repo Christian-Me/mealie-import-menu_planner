@@ -1,20 +1,19 @@
-# Mealie importer for Menu-Planner recipes
+# Mealie importer for Menu-Planner recipes V0.0.2
 
-A node.js script to import or updates Menu-Planner recipes into Mealie via the Mealie API.
+A node.js script to import or updates [Menu Planner](http://mp2.menu-planner.com/) recipes into [Mealie](https://mealie.io/) via the Mealie API.
+
+***Menu Planner*** is an iOS app which I used for many years. I was happy with this but the development stalled around 5 years ago introducing a paid subscription (which is not a bad thing for the hosting of the sync server). Missing features, static ingredients units (only in English) and other things made me looking for an alternative. Best would be open source software. I found Mealie, written in Python. A language I have no experience in but Mealie comes with a well documented API ic can use to import my 500+ recipes? So I wrote a little converter tool.
 
 * tries to match all base data to Mealie (prep Time, cook time, url, servings and rating)
 * uses existing units and ingredients. Create new ingredients if necessary.
 * support of translation table (units.json) to avoid inaccurate fuzzy search matches.
+* decode unicode codes like `&#252;` into chars
 * uses fuzzy search (fuze.js) to match ingredients, units and for ingredient highlighting (may result in wrong matches)
 * splits instructions into steps by paragraphs (as menu planner only supports a singe step)
 * Links ingredients to steps and highlights them in the text (Bold)
 * uploads included recipe image
 
-## background
-
-I used [Menu Planner](http://mp2.menu-planner.com/) for many years. Unfortunately the development stalled years ago. I only stayed because of my 500+ recipes carefully maintained over the years while looking for an open source alterative with the ability to migrate them. Finally I found one!
-
-## usage
+## Install and use the script
 
 * Install [Node.js](https://nodejs.org)
 * Menu Planner seams to only allow you to send a single recipes by mail. There you find an *.mpxr attachment which is a JSON formatted text file with all necessary data. Copy the file into the program folder as `Menu Planner Recipe.mpxr` (all recipes come with the same file name, so simply overwrite the last used). For testing my last import file is included.
@@ -22,7 +21,7 @@ I used [Menu Planner](http://mp2.menu-planner.com/) for many years. Unfortunatel
 * edit `units.json` to match menu planner units with your language dependent units. (consider sending me your file to include it for other users)
 * run the script `npn start` or `node index.js`.
 * or convince your mail client of choice to save the attachment to the script folder and start the script.
-* Please **refresh the page before editing**! See known issues below.
+* Please **refresh the page before editing the imported recipe or the ingredients**! See known issues below.
 
 ## outlook users
 
@@ -154,3 +153,8 @@ Quantity: 0.5 TL (Teelöffel) name: "Kümmel" note: ""
 "speck-zwiebel-flammkuchen" image updated! (200 OK)
 finished importing no new recipe(s) 1 updated
 ```
+
+## changelog
+
+0.0.1 initial release
+0.0.2 bug fixes, documentation, unicode decoder

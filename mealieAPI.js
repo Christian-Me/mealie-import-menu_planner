@@ -1,7 +1,7 @@
-import axios from 'axios';
+import Axios from 'axios';
 import { BASE_URL, TOKEN } from './credentials.js';
 
-const http = axios.create({
+const http = Axios.create({
     baseURL: BASE_URL, 
     headers: {
         'accept' : 'application/json',

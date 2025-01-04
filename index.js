@@ -1,12 +1,13 @@
 import fs from 'fs';
 import Fuse  from 'fuse.js';
 import { randomUUID } from 'crypto';
-import axios from 'axios';
+import Axios from 'axios';
 import FormData from 'form-data';
 import { exit } from 'process';
 import { builtinModules } from 'module';
 import { BASE_URL, TOKEN } from './credentials.js';
 import * as MealieAPI from './mealieAPI.js';
+import * as Tools from './tools.js';
 
 let rawData = fs.readFileSync('Menu Planner Recipe.mpxr');
 let mpRecipes = JSON.parse(rawData);
@@ -66,35 +67,7 @@ console.log('Menu Planer to Mealie');
 console.log('(c) Christian Meinert')
 console.log('---------------------');
 
-function fractionToDecimal(fraction) {
-    const [numerator, denominator] = fraction.split('/').map(Number);
-    if (isNaN(numerator) || isNaN(denominator) || denominator === 0) {
-        return NaN; // not a fraction
-    }
-    return numerator / denominator;
-}
-/**
- * remove text in parentheses out of a given text
-*
-* @param {*} text text to convert
-* @return {*} text without parentheses
-*/
-function removeTextInParenthesesAndExtraSpaces(text) {
-    let cleanedText = text.replace(/\(.*?\)/g, '');
-    cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
-    return cleanedText;
-}
 
-function getTextInParentheses(text, append = '') {
-    const parenthesesStart = text.indexOf('(');
-    const parenthesesEnd = text.indexOf(')');
-    let textInParentheses = '';
-    
-    if (parenthesesStart !== -1 && parenthesesEnd !== -1) {
-        textInParentheses = text.substring(parenthesesStart + 1, parenthesesEnd) + append;
-    }
-    return textInParentheses;
-}
 
 function getPluralForm(text) {
     const parenthesesStart = text.indexOf('(');
@@ -110,18 +83,6 @@ function getPluralForm(text) {
     return '';
 }
 
-function removeDuplicates(array, key) {
-    const seen = new Set();
-    return array.filter(item => {
-        const keyValue = item[key];
-        if (seen.has(keyValue)) {
-            return false;
-        } else {
-            seen.add(keyValue);
-            return true;
-        }
-    });
-}
 
 function getMpFoodItemById(mpRecipe, id) {
     if (id === null) return undefined;
@@ -132,7 +93,7 @@ function getMpFoodItemById(mpRecipe, id) {
 }
 
 function getMealieFood(mealieFoods, foodItem) {
-    let foodName = removeTextInParenthesesAndExtraSpaces(foodItem.Name);
+    let foodName = Tools.decodeUnicode(Tools.removeTextInParenthesesAndExtraSpaces(foodItem.Name));
     let mealieFood = mealieFoods.find((mealieFood) => (mealieFood.name === foodName)||(mealieFood.pluralName === foodName));
     if (mealieFood === undefined) { // find by fuzzy search
         const fuse = new Fuse(mealieFoods, MEALIE_INGREDIENT_FUSE_OPTIONS);
@@ -266,13 +227,15 @@ for (let mpRecipe of mpRecipes) {
         let food = undefined;
         let unit = undefined;
         let display = undefined;
-        let originalText = undefined;
+        let originalMpFoodName = undefined;
+        let originalMpFoodNote = undefined;
         let mpFoodItem = getMpFoodItemById(mpRecipe, mpIngredient.FoodItem_ID);
         if (mpFoodItem === undefined) {
             title = mpIngredient.HeaderName;
             continue;
         } else {
-            originalText = mpFoodItem.Name;
+            originalMpFoodName = Tools.decodeUnicode(mpFoodItem.Name);
+            originalMpFoodNote = Tools.decodeUnicode(mpFoodItem.Notes);
             if (mpIngredient.AmountPartDouble !== 0) {
                 quantity = mpIngredient.AmountPartDouble;
                 unit = getMealieUnit(mealieUnits, mpUnits, mpIngredient);
@@ -280,7 +243,7 @@ for (let mpRecipe of mpRecipes) {
             } else {
                 if (mpIngredient.Amount !== null) { // try the get the ammount out fo the Amount String
                     quantity = parseFloat(mpIngredient.Amount);
-                    if (isNaN(quantity)) quantity = fractionToDecimal(mpIngredient.Amount);
+                    if (isNaN(quantity)) quantity = Tools.fractionToDecimal(mpIngredient.Amount);
                     if (isNaN(quantity)) quantity = undefined;
                     unit = getMealieUnit(mealieUnits, mpUnits, mpIngredient);
                 }
@@ -289,16 +252,16 @@ for (let mpRecipe of mpRecipes) {
             food = getMealieFood(mealieFoods, mpFoodItem);
             if (food === undefined) { // create new food.
                 food = {
-                    "name" : removeTextInParenthesesAndExtraSpaces(mpFoodItem.Name),
-                    "pluralName" : getPluralForm(mpFoodItem.Name),
-                    "description" : getTextInParentheses(mpFoodItem.Name,mpFoodItem.Notes?.length>0 ? ' ' : '') + mpFoodItem.Notes,
+                    "name" : Tools.removeTextInParenthesesAndExtraSpaces(originalMpFoodName),
+                    "pluralName" : getPluralForm(Tools.decodeUnicode(originalMpFoodName)),
+                    "description" : Tools.getTextInParentheses(originalMpFoodName,originalMpFoodNote?.length>0 ? ' ' : '') + originalMpFoodNote,
                 }
                 food = await MealieAPI.createFood(food);
                 if (food.status<300) {
                     food = food.data;
                     console.log(` food ${food.name} created`)
                 } else {
-                    console.error(`ERROR creating food item`,mpFoodItem.Name);
+                    console.error(`ERROR creating food item`,originalMpFoodName);
                     food = undefined;
                 }
             }
@@ -311,7 +274,7 @@ for (let mpRecipe of mpRecipes) {
             note,
             display,
             title,
-            originalText,
+            originalText: originalMpFoodName,
             reference_id: randomUUID(),
         })-1];
         console.log(`Quantity: ${mealieIngredient.quantity} ${mealieIngredient.unit?.abbreviation} (${mealieIngredient.unit?.name}) name: "${mealieIngredient.food?.name}" note: "${mealieIngredient.note}"`)
@@ -322,14 +285,14 @@ for (let mpRecipe of mpRecipes) {
 
     // update instructions
     if (mpRecipe.RecipeSteps.length===1) { // It seams that all menu planner recipes have only one step (maybe was planned for a future option)
-        let mpRecipeSteps = mpRecipe.RecipeSteps[0].StepText.split('\n'); // split every paragraph of step 1
+        let mpRecipeSteps = Tools.decodeUnicode(mpRecipe.RecipeSteps[0].StepText).split('\n'); // split every paragraph of step 1
         mpRecipe.RecipeSteps = [];
         for (let mpRecipeStep of mpRecipeSteps) {
             if (mpRecipeStep.length > 5) { // ignore small steps as they might my multiple new lines
                 mpRecipe.RecipeSteps.push({StepText : mpRecipeStep.trim()})
             }
         }
-        console.log(`created ${mpRecipe.RecipeSteps} steps`);
+        console.log(`created ${mpRecipe.RecipeSteps.length} steps`);
     }
     const fuse = new Fuse(mealieFoodList, MEALIE_INGREDIENT_FUSE_OPTIONS);
     for (let mpInstruction of mpRecipe.RecipeSteps) {
@@ -356,7 +319,7 @@ for (let mpRecipe of mpRecipes) {
             }
 
         }
-        const uniqueIngredientReferences = removeDuplicates(ingredientReferences, 'referenceId');
+        const uniqueIngredientReferences = Tools.removeDuplicates(ingredientReferences, 'referenceId');
         mealieData.recipeInstructions.push(
             {
                 "text": stepText.trim(),
@@ -389,7 +352,7 @@ for (let mpRecipe of mpRecipes) {
           });
         formData.append('extension','jpg')
         
-        response = await axios.put(BASE_URL+'/api/recipes/'+currentSlug+'/image', formData, {
+        response = await Axios.put(BASE_URL+'/api/recipes/'+currentSlug+'/image', formData, {
             headers: {
                 ...formData.getHeaders(),
                 'accept' : 'application/json',
