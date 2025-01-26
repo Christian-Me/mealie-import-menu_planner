@@ -19,6 +19,7 @@ export function fractionToDecimal(fraction) {
  * @return {*} 
  */
 export function decodeUnicode(str) {
+    if (str === null || str === undefined) return str;
     return str.replace(/&#(\d+);/g, function(match, dec) {
         return String.fromCharCode(dec);
     });
@@ -53,13 +54,20 @@ export function getTextInParentheses(text, append = '') {
     }
     return textInParentheses;
 }
-
+/**
+ * remove punctuation out of a string
+ * @param {String} str  text 
+ * @returns 
+ */
+export function removePunctuation(str) {
+    return str.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
+}
 /**
  * remove duplicates in an array of objects comparing a single key
  *
  * @export
- * @param {*} array of objects
- * @param {*} key to match
+ * @param {Array} array of objects
+ * @param {String} key to match
  * @return {*} 
  */
 export function removeDuplicates(array, key) {

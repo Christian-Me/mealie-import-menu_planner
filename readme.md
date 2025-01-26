@@ -1,4 +1,4 @@
-# Mealie importer for Menu-Planner recipes V0.0.2
+# Mealie importer for Menu-Planner recipes V0.0.3
 
 A node.js script to import or updates [Menu Planner](http://mp2.menu-planner.com/) recipes into [Mealie](https://mealie.io/) via the Mealie API.
 
@@ -12,6 +12,10 @@ A node.js script to import or updates [Menu Planner](http://mp2.menu-planner.com
 * splits instructions into steps by paragraphs (as menu planner only supports a singe step)
 * Links ingredients to steps and highlights them in the text (Bold)
 * uploads included recipe image
+* bulk import of '.mpxr' files in `./import` directory (V0.0.3^)
+* localization support (`localization.json`) for text constants (V0.0.3^)
+
+**This is the final Version as I successfully imported all my 500 recipes into mealie. If you encounter problems let me know.**
 
 ## Install and use the script
 
@@ -19,6 +23,7 @@ A node.js script to import or updates [Menu Planner](http://mp2.menu-planner.com
 * Menu Planner seams to only allow you to send a single recipes by mail. There you find an *.mpxr attachment which is a JSON formatted text file with all necessary data. Copy the file into the program folder as `Menu Planner Recipe.mpxr` (all recipes come with the same file name, so simply overwrite the last used). For testing my last import file is included.
 * edit `credentials.js.template` with your token and instance url and save it as `credentials.js`
 * edit `units.json` to match menu planner units with your language dependent units. (consider sending me your file to include it for other users)
+* edit `localization.json` to match your language
 * run the script `npn start` or `node index.js`.
 * or convince your mail client of choice to save the attachment to the script folder and start the script.
 * Please **refresh the page before editing the imported recipe or the ingredients**! See known issues below.
@@ -156,5 +161,6 @@ finished importing no new recipe(s) 1 updated
 
 ## changelog
 
-0.0.1 initial release
-0.0.2 bug fixes, documentation, unicode decoder
+* 0.0.1 initial release
+* 0.0.2 bug fixes, documentation, unicode decoder
+* 0.0.3 bug fixes, bulk import of '.mpxr' files in `./import` directory, yields fix, localization support

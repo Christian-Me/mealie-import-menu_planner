@@ -2,6 +2,7 @@
     "bag"       : "Beutel",
     "container" : "Packung",
     "can"       : "Dose",
+    "jar"       : "Glas",
     "tbl"       : "Esslöffel",
     "tsp"       : "Teelöffel",
     "ml"        : "Milliliter",
